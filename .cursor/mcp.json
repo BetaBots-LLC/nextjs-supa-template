@@ -4,5 +4,20 @@
       "command": "npx",
       "args": ["shadcn@latest", "mcp"]
     }
+  },
+  "supabase": {
+    "url": "https://mcp.supabase.com/mcp",
+
+    "headers": {
+      "Authorization": "Bearer <your_supabase_api_key>"
+    }
+  },
+  "tanstack": {
+    "command": "npx",
+    "args": ["@tanstack/cli", "mcp"]
+  },
+  "next-devtools": {
+    "command": "npx",
+    "args": ["-y", "next-devtools-mcp@latest"]
   }
 }
