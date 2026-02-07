@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import type { Database } from "./types";
+import type { Database } from "@/types/database.types";
 
 // No cookies = safe with "use cache"
 export const supabase = createClient<Database>(
