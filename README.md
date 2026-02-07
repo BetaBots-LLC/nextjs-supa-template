@@ -49,14 +49,21 @@ src/
 ├── components/
 │   ├── ui/              # shadcn/ui components
 │   └── theme-provider.tsx
-└── lib/
-    ├── utils.ts         # Utility functions (cn, etc.)
-    └── supabase/        # Supabase client helpers
-        ├── client.ts    # Browser client
-        ├── server.ts    # Server component client
-        ├── middleware.ts # Session refresh logic
-        ├── public.ts    # Public/anon client
-        └── types.ts     # Database types
+├── lib/
+│   ├── axios/           # Axios HTTP client
+│   │   └── client.ts
+│   └── supabase/        # Supabase client helpers
+│       ├── client.ts    # Browser client
+│       ├── server.ts    # Server component client
+│       ├── middleware.ts # Session refresh logic
+│       └── public.ts    # Public/anon client
+├── schemas/             # Zod validation schemas
+│   └── index.ts
+├── types/               # TypeScript type definitions
+│   └── database.types.ts
+└── utils/               # Utility functions
+    ├── index.ts
+    └── tailwind.ts      # Tailwind class merge helper (cn)
 ```
 
 ## Scripts
