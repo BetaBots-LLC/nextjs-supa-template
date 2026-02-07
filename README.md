@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Next.js + Supabase Template
+
+A modern, batteries-included starter template for building full-stack applications with Next.js and Supabase.
+
+## Tech Stack
+
+- **Framework**: [Next.js 16](https://nextjs.org) with App Router
+- **React**: React 19 with [React Compiler](https://react.dev/learn/react-compiler)
+- **Database & Auth**: [Supabase](https://supabase.com) with SSR support
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com)
+- **UI Components**: [shadcn/ui](https://ui.shadcn.com) (base-vega style)
+- **Forms**: [TanStack React Form](https://tanstack.com/form) + [Zod](https://zod.dev) validation
+- **Icons**: [Lucide React](https://lucide.dev)
+- **Theming**: [next-themes](https://github.com/pacocoursey/next-themes) (dark mode ready)
+- **Linting/Formatting**: [Biome](https://biomejs.dev)
+- **Analytics**: [Vercel Analytics](https://vercel.com/analytics)
+- **Package Manager**: pnpm
 
 ## Getting Started
 
-First, run the development server:
+### 1. Clone and install dependencies
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Set up environment variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a `.env.local` file with your Supabase credentials:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_PUBLISHABLE_KEY=your-supabase-anon-key
+```
 
-## Learn More
+### 3. Run the development server
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open [http://localhost:3000](http://localhost:3000) to view your app.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Structure
 
-## Deploy on Vercel
+```
+src/
+├── app/                 # App Router pages and layouts
+├── components/
+│   ├── ui/              # shadcn/ui components
+│   └── theme-provider.tsx
+└── lib/
+    ├── utils.ts         # Utility functions (cn, etc.)
+    └── supabase/        # Supabase client helpers
+        ├── client.ts    # Browser client
+        ├── server.ts    # Server component client
+        ├── middleware.ts # Session refresh logic
+        ├── public.ts    # Public/anon client
+        └── types.ts     # Database types
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start development server |
+| `pnpm build` | Build for production |
+| `pnpm start` | Start production server |
+| `pnpm lint` | Run Biome linter |
+| `pnpm format` | Format code with Biome |
+
+## Adding UI Components
+
+This template uses shadcn/ui. Add new components with:
+
+```bash
+pnpm dlx shadcn@latest add [component-name]
+```
+
+## Deploy
+
+Deploy easily to [Vercel](https://vercel.com/new):
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/nextjs-supa-template)
