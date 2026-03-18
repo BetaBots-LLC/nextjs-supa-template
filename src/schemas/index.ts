@@ -34,7 +34,7 @@ export const parsedAddressSchema = z.object({
   /** Street address line, e.g. "123 Main St" or "PO Box 456" */
   address: z.string().min(1, "Street address is required"),
   /** Apartment / suite / unit — empty string when not present */
-  unit: z.string().default(""),
+  unit: z.string(),
   city: z.string().min(1, "City is required"),
   /** 2-letter state abbreviation, e.g. "CA" */
   state: z.string().length(2, "Use a 2-letter state abbreviation"),
