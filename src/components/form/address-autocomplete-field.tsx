@@ -1,7 +1,7 @@
 "use client";
 
 import { MapPinIcon } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   Combobox,
   ComboboxContent,
@@ -16,6 +16,7 @@ import { isInvalid } from "@/lib/form";
 
 export interface ParsedAddress {
   address: string;
+  unit: string;
   city: string;
   state: string;
   zip: string;
@@ -35,6 +36,8 @@ function parseAddressComponents(
 ): ParsedAddress | null {
   let streetNumber = "";
   let route = "";
+  let unit = "";
+  let postBox = "";
   let city = "";
   let state = "";
   let zip = "";
@@ -43,39 +46,38 @@ function parseAddressComponents(
     const type = c.types[0];
     switch (type) {
       case "street_number":
-        streetNumber = c.longText;
+        streetNumber = c.longText ?? "";
         break;
       case "route":
-        route = c.longText;
+        route = c.longText ?? "";
+        break;
+      case "subpremise":
+        unit = c.longText ?? "";
+        break;
+      case "post_box":
+        postBox = c.longText ?? "";
         break;
       case "locality":
-        city = c.longText;
+        city = c.longText ?? "";
         break;
       case "sublocality_level_1":
-        if (!city) city = c.longText;
+        if (!city) city = c.longText ?? "";
         break;
       case "administrative_area_level_1":
-        state = c.shortText;
+        state = c.shortText ?? "";
         break;
       case "postal_code":
-        zip = c.longText;
+        zip = c.longText ?? "";
         break;
     }
   }
 
-  const address = streetNumber ? `${streetNumber} ${route}` : route;
+  // PO Box addresses have no street_number/route
+  const address =
+    postBox || (streetNumber ? `${streetNumber} ${route}` : route);
   if (!address) return null;
 
-  return { address, city, state, zip };
-}
-
-// ── Types ───────────────────────────────────────────────────────────────────
-
-interface Suggestion {
-  placeId: string;
-  mainText: string;
-  secondaryText: string;
-  prediction: google.maps.places.PlacePrediction;
+  return { address, unit, city, state, zip };
 }
 
 // ── Component ───────────────────────────────────────────────────────────────
@@ -90,9 +92,10 @@ export function AddressAutocompleteField({
   const id = field.name as string;
   const hasError = isInvalid(field);
 
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<
+    google.maps.places.PlacePrediction[]
+  >([]);
   const [open, setOpen] = useState(false);
-  const [placesReady, setPlacesReady] = useState(false);
 
   const sessionTokenRef =
     useRef<google.maps.places.AutocompleteSessionToken | null>(null);
@@ -103,63 +106,48 @@ export function AddressAutocompleteField({
   const onClearRef = useRef(onClear);
   onClearRef.current = onClear;
 
-  // Load the places library once
-  useEffect(() => {
-    if (typeof google === "undefined") return;
+  // Debounced fetch — importLibrary is idempotent and cached after first call
+  const fetchSuggestions = useCallback((input: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
 
-    google.maps
-      .importLibrary("places")
-      .then(() => {
-        sessionTokenRef.current =
-          new google.maps.places.AutocompleteSessionToken();
-        setPlacesReady(true);
-      })
-      .catch(() => {});
-  }, []);
+    if (input.length < 3) {
+      setSuggestions([]);
+      return;
+    }
 
-  // Debounced fetch
-  const fetchSuggestions = useCallback(
-    (input: string) => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      if (typeof google === "undefined") return;
 
-      if (!placesReady || input.length < 3) {
-        setSuggestions([]);
-        return;
-      }
+      try {
+        await google.maps.importLibrary("places");
 
-      debounceRef.current = setTimeout(async () => {
-        try {
-          const { suggestions: results } =
-            await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(
-              {
-                input,
-                sessionToken: sessionTokenRef.current ?? undefined,
-                includedPrimaryTypes: [
-                  "street_address",
-                  "subpremise",
-                  "premise",
-                ],
-                includedRegionCodes: ["us"],
-              },
-            );
-
-          const mapped: Suggestion[] = results.map((s) => ({
-            placeId: s.placePrediction.placeId,
-            mainText:
-              s.placePrediction.mainText?.text ?? s.placePrediction.text.text,
-            secondaryText: s.placePrediction.secondaryText?.text ?? "",
-            prediction: s.placePrediction,
-          }));
-
-          setSuggestions(mapped);
-          if (mapped.length > 0) setOpen(true);
-        } catch {
-          setSuggestions([]);
+        // Lazy session token — created once per session, reset after selection
+        if (!sessionTokenRef.current) {
+          sessionTokenRef.current =
+            new google.maps.places.AutocompleteSessionToken();
         }
-      }, 300);
-    },
-    [placesReady],
-  );
+
+        const { suggestions: results } =
+          await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(
+            {
+              input,
+              sessionToken: sessionTokenRef.current,
+              includedPrimaryTypes: ["street_address", "subpremise", "premise"],
+              includedRegionCodes: ["us"],
+            },
+          );
+
+        const mapped = results
+          .map((s) => s.placePrediction)
+          .filter((p): p is google.maps.places.PlacePrediction => p !== null);
+
+        setSuggestions(mapped);
+        if (mapped.length > 0) setOpen(true);
+      } catch {
+        setSuggestions([]);
+      }
+    }, 300);
+  }, []);
 
   // Handle selecting a suggestion from the combobox
   const handleValueChange = useCallback(
@@ -180,9 +168,9 @@ export function AddressAutocompleteField({
       setSuggestions([]);
 
       // Show the main text immediately while we fetch details
-      field.handleChange(suggestion.mainText);
+      field.handleChange(suggestion.mainText?.text ?? suggestion.text.text);
 
-      const place = suggestion.prediction.toPlace();
+      const place = suggestion.toPlace();
       await place.fetchFields({ fields: ["addressComponents"] });
 
       // Reset session token (Google billing best practice)
@@ -232,10 +220,12 @@ export function AddressAutocompleteField({
               <ComboboxItem key={suggestion.placeId} value={suggestion.placeId}>
                 <MapPinIcon className="size-3.5 shrink-0 text-muted-foreground" />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate">{suggestion.mainText}</div>
-                  {suggestion.secondaryText && (
+                  <div className="truncate">
+                    {suggestion.mainText?.text ?? suggestion.text.text}
+                  </div>
+                  {suggestion.secondaryText?.text && (
                     <div className="truncate text-xs text-muted-foreground">
-                      {suggestion.secondaryText}
+                      {suggestion.secondaryText.text}
                     </div>
                   )}
                 </div>
