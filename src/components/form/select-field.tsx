@@ -6,7 +6,6 @@ import {
   FieldError,
   FieldLabel,
 } from "@/components/ui/field";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,

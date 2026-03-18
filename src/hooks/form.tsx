@@ -2,7 +2,7 @@
 
 import { createFormHook, createFormHookContexts } from "@tanstack/react-form";
 
-import { AddressAutocompleteField } from "@/components/form/address-autocomplete";
+import { AddressAutocompleteField } from "@/components/form/address-autocomplete-field";
 import { CheckboxField } from "@/components/form/checkbox-field";
 import { InputField } from "@/components/form/input-field";
 import { PhoneField } from "@/components/form/phone-field";
