@@ -8,7 +8,7 @@ import { z } from "zod";
 // digits and national-format strings are accepted.
 
 export const phoneSchema = z.string().superRefine((val, ctx) => {
-  if (!val || !val.trim()) {
+  if (!val?.trim()) {
     ctx.addIssue({
       code: "custom",
       message: "Phone number is required",
